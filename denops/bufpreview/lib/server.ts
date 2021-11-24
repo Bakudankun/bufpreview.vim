@@ -1,12 +1,14 @@
-import { Denops } from "https://deno.land/x/denops_std@v2.0.0/mod.ts";
-import { v4 } from "https://deno.land/std@0.109.0/uuid/mod.ts";
+import { Denops, Renderer, v4 } from "./deps.ts";
 
 import Buffer from "./buffer.ts";
+
+// TODO: レンダラーが使えるかのチェックをする
 
 export default class Server {
   private _denops: Denops;
   private _bufnr: number;
   private _onClose: () => void;
+  private _renderer: Renderer
 
   private _buffer: Buffer;
   private _listener: Deno.Listener | undefined;
@@ -20,12 +22,18 @@ export default class Server {
   constructor(
     denops: Denops,
     bufnr: number,
-    onClose: () => void,
     // サーバ側で通信が切断された時に呼ばれます
+    onClose: () => void,
+    // レンダラー
+    renderer: Renderer
   ) {
     this._denops = denops;
     this._bufnr = bufnr;
     this._onClose = onClose;
+    this._renderer = renderer
+
+    // TODO: 消す
+    this._renderer.avaiableRenderer()
 
     this._buffer = new Buffer(denops, this._bufnr);
 
@@ -45,6 +53,7 @@ export default class Server {
         cursorLine: {
           linePos: buffer.cursorline,
           bufLengh: buffer.lines.length,
+          data: this._renderer.data("cursorMoved")
         },
       };
       this._sockets.forEach((socket) => {
@@ -54,13 +63,14 @@ export default class Server {
 
     // バッファが削除された時
     this._buffer.events.on("bufDelete", (_) => {
+      const data = {
+        data: this._renderer.data("bufDelete")
+      }
       this.close();
     });
 
     // クライアント
-    this._body = Deno.readTextFileSync(
-      new URL("./filetype/markdown/client/markdown.html", import.meta.url),
-    );
+    this._body = this._renderer.rendererClientHTML
   }
 
   run(host: string, port: number) {
@@ -135,9 +145,7 @@ export default class Server {
   }
 
   get host(): string {
-    if (this._listener == undefined) {
-      return -1;
-    }
+    // @ts-ignore: type is not exposed
     return this._listener.addr.hostname as string;
   }
 
