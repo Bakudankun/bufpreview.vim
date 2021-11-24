@@ -6,6 +6,8 @@ import {
   open,
   Renderer,
   vars,
+  basename,
+  join
 } from "./lib/deps.ts";
 
 import Server from "./lib/server.ts";
@@ -13,13 +15,43 @@ import Server from "./lib/server.ts";
 // 一度に開けるサーバーは一つ
 let server: Server | undefined;
 
-const Markdown =
-  (await import(
-    (new URL("./@renderer/markdown/main.ts", import.meta.url)).href
-  )).default;
+// レンダラー
+interface Renderers {
+  [key: string]: Renderer;
+}
+let renderers: Renderers
+// renderers.push(
+//   (await import(
+//     (new URL("./@renderers/markdown/main.ts", import.meta.url)).href
+//   )).default,
+// );
 
-export function main(denops: Denops) {
+export async function main(denops: Denops) {
+  // 全てのレンダラーを探索
+  async function findRenderer(): Promise<Renderers> {
+    const runtimepath = (await op.runtimepath.getGlobal(denops)).split(",");
+    const paths: string[] = []
+    const ret: Renderers = {}
+    // さがす
+    for (const path of runtimepath) {
+      const i = await fn.globpath(denops, path, "denops/bufpreview/@renderers/*", true, true) as string[]
+      paths.push(...i)
+    }
+    // よみこむ
+    // TODO: ここ非同期で読み込む
+    for (const path of paths) {
+      const name = basename(path)
+      const codePath = join(path, "main.ts")
+      ret[name] = (await import(codePath)).default
+    }
+    return ret
+  }
+
+  // test
+  renderers = await findRenderer()
+
   denops.dispatcher = {
+    // Vimから呼ばれる
     async md(arg: unknown): Promise<void> {
       ensureString(arg);
 
@@ -40,8 +72,8 @@ export function main(denops: Denops) {
 
       // サーバーを開く
       const openServer = async () => {
-        // レンダラー
-        const renderer = new Markdown(denops);
+        // @ts-ignore: これ型エラーにならない方法知っている方教えて
+        const renderer = new renderers["markdown"](denops)
         // サーバーが既に開かれているなら
         if (server != undefined) {
           server.close();
