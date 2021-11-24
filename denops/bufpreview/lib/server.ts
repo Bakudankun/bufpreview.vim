@@ -8,7 +8,7 @@ export default class Server {
   private _denops: Denops;
   private _bufnr: number;
   private _onClose: () => void;
-  private _renderer: Renderer
+  private _renderer: Renderer;
 
   private _buffer: Buffer;
   private _listener: Deno.Listener | undefined;
@@ -25,15 +25,15 @@ export default class Server {
     // サーバ側で通信が切断された時に呼ばれます
     onClose: () => void,
     // レンダラー
-    renderer: Renderer
+    renderer: Renderer,
   ) {
     this._denops = denops;
     this._bufnr = bufnr;
     this._onClose = onClose;
-    this._renderer = renderer
+    this._renderer = renderer;
 
     // TODO: 消す
-    this._renderer.avaiableRenderer()
+    this._renderer.avaiableRenderer();
 
     this._buffer = new Buffer(denops, this._bufnr);
 
@@ -53,7 +53,7 @@ export default class Server {
         cursorLine: {
           linePos: buffer.cursorline,
           bufLengh: buffer.lines.length,
-          data: this._renderer.data("cursorMoved")
+          data: this._renderer.data("cursorMoved"),
         },
       };
       this._sockets.forEach((socket) => {
@@ -64,13 +64,13 @@ export default class Server {
     // バッファが削除された時
     this._buffer.events.on("bufDelete", (_) => {
       const data = {
-        data: this._renderer.data("bufDelete")
-      }
+        data: this._renderer.data("bufDelete"),
+      };
       this.close();
     });
 
     // クライアント
-    this._body = this._renderer.rendererClientHTML
+    this._body = this._renderer.rendererClientHTML;
   }
 
   run(host: string, port: number) {

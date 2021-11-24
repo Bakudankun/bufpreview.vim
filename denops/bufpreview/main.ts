@@ -1,11 +1,22 @@
-import { Denops, ensureString, fn, op, open, vars, Renderer } from "./lib/deps.ts";
+import {
+  Denops,
+  ensureString,
+  fn,
+  op,
+  open,
+  Renderer,
+  vars,
+} from "./lib/deps.ts";
 
 import Server from "./lib/server.ts";
 
 // 一度に開けるサーバーは一つ
 let server: Server | undefined;
 
-const Markdown = (await import((new URL("./@renderer/markdown/main.ts", import.meta.url)).href)).default
+const Markdown =
+  (await import(
+    (new URL("./@renderer/markdown/main.ts", import.meta.url)).href
+  )).default;
 
 export function main(denops: Denops) {
   denops.dispatcher = {
@@ -30,7 +41,7 @@ export function main(denops: Denops) {
       // サーバーを開く
       const openServer = async () => {
         // レンダラー
-        const renderer = new Markdown(denops)
+        const renderer = new Markdown(denops);
         // サーバーが既に開かれているなら
         if (server != undefined) {
           server.close();

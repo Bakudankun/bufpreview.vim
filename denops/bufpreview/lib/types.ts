@@ -1,4 +1,4 @@
-import { Denops } from "./deps.ts"
+import { Denops } from "./deps.ts";
 
 type JsonPrimitive =
   | boolean
@@ -15,15 +15,15 @@ type Json = JsonPrimitive | JsonArray | JsonObject;
 type Autocmd =
   | "textChenged"
   | "cursorMoved"
-  | "bufDelete"
+  | "bufDelete";
 
 // レンダラー
 // denopsが渡される
 export abstract class Renderer {
-  private _denops
+  private _denops;
 
-  constructor (denops: Denops) {
-    this._denops = denops
+  constructor(denops: Denops) {
+    this._denops = denops;
   }
   // クライアントのHTML
   abstract get rendererClientHTML(): string;
