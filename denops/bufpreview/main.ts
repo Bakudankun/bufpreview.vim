@@ -20,11 +20,6 @@ interface Renderers {
   [key: string]: Renderer;
 }
 let renderers: Renderers
-// renderers.push(
-//   (await import(
-//     (new URL("./@renderers/markdown/main.ts", import.meta.url)).href
-//   )).default,
-// );
 
 export async function main(denops: Denops) {
   // 全てのレンダラーを探索
@@ -46,8 +41,6 @@ export async function main(denops: Denops) {
     }
     return ret
   }
-
-  // test
   renderers = await findRenderer()
 
   denops.dispatcher = {
@@ -73,7 +66,7 @@ export async function main(denops: Denops) {
       // サーバーを開く
       const openServer = async () => {
         // @ts-ignore: これ型エラーにならない方法知っている方教えて
-        const renderer = new renderers["markdown"](denops)
+        const renderer = new renderers["markdown"](denops, { plantUMLPort: "localhost" })
         // サーバーが既に開かれているなら
         if (server != undefined) {
           server.close();

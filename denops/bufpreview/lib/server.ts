@@ -19,6 +19,7 @@ export default class Server {
     globalThis.WebSocket
   >();
 
+  // 初期化処理
   constructor(
     denops: Denops,
     bufnr: number,
@@ -32,13 +33,10 @@ export default class Server {
     this._onClose = onClose;
     this._renderer = renderer;
 
-    // TODO: 消す
-    this._renderer.avaiableRenderer();
-
     this._buffer = new Buffer(denops, this._bufnr);
 
     // 更新
-    this._buffer.events.on("textChanged", (buffer) => {
+    this._buffer.events.on("TextChanged", (buffer) => {
       const data = {
         buf: buffer.lines,
       };
@@ -48,12 +46,12 @@ export default class Server {
       });
     });
 
-    this._buffer.events.on("cursorMoved", (buffer) => {
+    this._buffer.events.on("CursorMoved", (buffer) => {
       const data = {
         cursorLine: {
           linePos: buffer.cursorline,
           bufLengh: buffer.lines.length,
-          data: this._renderer.data("cursorMoved"),
+          data: this._renderer.dataToClient("CursorMoved"),
         },
       };
       this._sockets.forEach((socket) => {
@@ -62,10 +60,13 @@ export default class Server {
     });
 
     // バッファが削除された時
-    this._buffer.events.on("bufDelete", (_) => {
+    this._buffer.events.on("BufDelete", (_) => {
       const data = {
-        data: this._renderer.data("bufDelete"),
+        data: this._renderer.dataToClient("BufDelete"),
       };
+      this._sockets.forEach((socket) => {
+        socket.send(JSON.stringify(data));
+      });
       this.close();
     });
 
@@ -85,7 +86,7 @@ export default class Server {
     const handleHttp = async (conn: Deno.Conn) => {
       for await (const e of Deno.serveHttp(conn)) {
         const { request, respondWith } = e;
-        // クライアントを送付
+        // クライアントの送信
         if (request.method === "GET" && new URL(request.url).pathname === "/") {
           respondWith(
             new Response(this._body, {
@@ -115,10 +116,14 @@ export default class Server {
     this._sockets.set(uid, socket);
     socket.onopen = () => {
       // 初回接続時にバッファを送信する
-      this._buffer.events.emit("textChanged", this._buffer);
-      this._buffer.events.emit("cursorMoved", this._buffer);
+      this._buffer.events.emit("TextChanged", this._buffer);
+      this._buffer.events.emit("CursorMoved", this._buffer);
       // 接続を確立したソケットのみに送信
-      socket.send(JSON.stringify({ bufname: this._buffer.bufname }));
+      socket.send(JSON.stringify({
+        bufname: this._buffer.bufname,
+        // レンダラー依存のデータ
+        data: this._renderer.onConnection()
+      }));
     };
     // ブラウザ側から通信が切断された時
     socket.onclose = () => {

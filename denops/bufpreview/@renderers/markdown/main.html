@@ -198,6 +198,11 @@
         document.title = res.bufname
       }
 
+      // レンダラーからのデータ
+      if (res.data != undefined) {
+        console.log(res.data)
+      }
+
       // バッファ内容の更新
       if (res.buf != undefined) {
         IncrementalDOM.patch(

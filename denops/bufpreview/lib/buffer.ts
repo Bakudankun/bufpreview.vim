@@ -1,9 +1,9 @@
 import { anonymous, autocmd, Denops, EventEmitter } from "./deps.ts";
 
 type BufferEvents = {
-  textChanged(buffer: Buffer): void;
-  cursorMoved(buffer: Buffer): void;
-  bufDelete(buffer: Buffer): void;
+  TextChanged(buffer: Buffer): void;
+  CursorMoved(buffer: Buffer): void;
+  BufDelete(buffer: Buffer): void;
 };
 
 /*
@@ -75,16 +75,16 @@ export default class Buffer {
         1,
         "$",
       ) as string[];
-      this.events.emit("textChanged", this);
+      this.events.emit("TextChanged", this);
     })[0];
     // cursorMoved callback
     this._cursorMoved = anonymous.add(this._denops, async () => {
       this._cursorLine = (await this._denops.call("getcurpos") as number[])[1];
-      this.events.emit("cursorMoved", this);
+      this.events.emit("CursorMoved", this);
     })[0];
     // bufLeave callback
     this._bufDelete = anonymous.add(this._denops, () => {
-      this.events.emit("bufDelete", this);
+      this.events.emit("BufDelete", this);
     })[0];
 
     await autocmd.group(
@@ -109,8 +109,8 @@ export default class Buffer {
       },
     );
 
-    this.events.emit("textChanged", this);
-    this.events.emit("cursorMoved", this);
+    this.events.emit("TextChanged", this);
+    this.events.emit("CursorMoved", this);
   }
 
   // remove autocmd and anonymous function
