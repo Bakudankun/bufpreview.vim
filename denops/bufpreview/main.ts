@@ -15,8 +15,8 @@ export function main(denops: Denops) {
       const browser =
         (await vars.g.get(denops, "bufpreview_browser") || undefined) as
           | string
+          | string[]
           | undefined;
-      const opener: { app?: string } = { app: browser };
       const openBrowserFn =
         (await vars.g.get(denops, "bufpreview_open_browser_fn") ||
           "") as string;
@@ -44,6 +44,16 @@ export function main(denops: Denops) {
         if (openBrowserFn != "") {
           await fn.call(denops, openBrowserFn, [link]);
         } else {
+          if (Array.isArray(browser)) {
+            browser.forEach((val, index, array) => {
+              if (val === "--app") {
+                // for Chrome and MS Edge: open in app mode
+                array[index] = "--app=" + link;
+              }
+            });
+          }
+          const opener: { app?: string | string[] } = { app: browser };
+
           open(link, opener).catch((_) => {
             console.log(`Server started on ${link}`);
           });
