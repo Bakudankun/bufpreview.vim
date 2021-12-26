@@ -59,10 +59,13 @@ The function receives a URL string of preview page.
 
 *g:bufpreview_browser*
 (default: "")
-Specifiies browser to preview.
+Specifiies browser to preview. It can also be a list of command line arguments
+starts with the browser name. If one item of the list is "--app", it is
+translated to "--app=<preview URL>".
 e.g.
 >
   let g:bufpreview_browser = "chromium"
+  let g:bufpreview_browser = ["msedge", "--app"]
 >
 
 *g:bufpreview_server_host*
